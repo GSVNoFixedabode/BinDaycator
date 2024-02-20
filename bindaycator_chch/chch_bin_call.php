@@ -1,11 +1,25 @@
 <?php
-
 // Check if the ID is provided as a command-line argument ID should be 82918
 // Retrieve the variable passed in the URL
-$propertyid = $_GET['propertyid'];
+$raw_input = $_GET['propertyid'];
 
-// Get the ID from the command-line argument
-//$id = urlencode($argv[1]);
+// Sanitise
+function sanitizeInput($input) {
+    // Remove any non-numeric characters
+    $sanitized_input = preg_replace("/[^0-9]/", "", $input);
+
+    // Check if the sanitized input is exactly 5 digits long
+    if(strlen($sanitized_input) === 5) {
+        return $sanitized_input;
+    } else {
+        return false; // Return false if the input is not a 5-digit number
+    }
+}
+
+$propertyid = sanitizeInput($raw_input);
+if($propertyid == false) {
+    exit("Invalid input!");
+}
 
 // URL of the API with the ID parameter
 $url = "https://www.ccc.govt.nz/services/rubbish-and-recycling/collections/getProperty?ID=$propertyid";
