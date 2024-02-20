@@ -14,6 +14,17 @@ led_count = 3 # number of LEDs in strip
 pin_no = 2 #pin number on board for D4
 weeknum = 0 # set global
 
+# Bin day by week, week 0 never used, weeks 1-52 sequencing blue yellow
+# Once DCC switch to 2-bin system then will rework this
+#2024 so far
+bin_day = [
+    'white',
+    'blue','yellow','blue','yellow','blue','yellow','blue','yellow','blue','yellow',
+    'blue','yellow','blue','yellow','blue','yellow','blue','yellow','blue','yellow',
+    'blue','yellow','blue','yellow','blue','yellow','blue','yellow','blue','yellow',
+    'blue','yellow','blue','yellow','blue','yellow','blue','yellow','blue','yellow',
+    'blue','yellow','blue','yellow','blue','yellow','blue','yellow','blue','yellow','blue','yellow'
+    ]
 # colours
 red = [255,0,0]
 green = [0,255,0]
@@ -98,38 +109,21 @@ def do_connect():
 # On success pulse up then down
     pulsing('green')
         
-#
-def grabbinweek():
-    import requests
-    import os
-    import json
 
-# Read address file
+# Wibbly wobbly timey wimey bits
+#####################################
+    
+def grabcurrentdate():
+#if needed, overwrite default time server
+    ntptime.host = "0.nz.pool.ntp.org"
     try:
-        f1 = open("address", "r")
-    # continue with the file.
-    except OSError:  # open failed
-        f1 = open("address", "w")
-        f1.write("167 Signal Hill Road")
-        f1.close    
-
-    f2 = open("address", "r")
-    curr_address = f2.read()
-    print(curr_address)
-
-# Call DCC site
-    DCC_Call = "https://www.dunedin.govt.nz/design/rubbish-and-collection-days-search/lookup/_nocache?query=" + curr_address
-    DCC_Call = DCC_Call.replace(" ", "%20")
-    print(DCC_Call)
-    r = requests.get(DCC_Call)
-# Use one of these depending on what your response looks like:
-    print(r.text)
-    jdata = json.loads(r.text)
-    colour= jdata[0]['attributes']['CurrentWeek']  ### get the "y" or "b" part on return
-    colour = colour.replace("y","yellow")
-    colour = colour.replace("b","blue")
-    r.close()
-    return colour
+  #make sure to have internet connection
+        ntptime.settime()
+        print("Local time after synchronization：%s" %str(time.localtime()))
+    except:
+        print("Error syncing time")
+    week_num = int(time.localtime()[7]/7)
+    return week_num
 
 ##################################################################
 # And now for the main event
@@ -139,12 +133,13 @@ for ii in range (led_count):
 np.write()
 # 1. Get network connection
 do_connect()
-week_colour = grabbinweek()
+#2. GEt current true date and week number
+weeknum = grabcurrentdate()
 
 # Main loop for twiddling metaphorical thumbs
 while True:
-#    week_colour = bin_day[weeknum]
-#    print(weeknum)
+    week_colour = bin_day[weeknum]
+    print(weeknum)
     print(week_colour)
     week_index = globals()[week_colour]
    
