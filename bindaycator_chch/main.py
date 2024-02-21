@@ -27,7 +27,7 @@ green = [0,255,0]
 Organic = green
 
 yellow = [255,255,0]
-Recycling = yellow
+Recycle = yellow
 
 blue = [0,0,255]
 black = [0,0,0]
