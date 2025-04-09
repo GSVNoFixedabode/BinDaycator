@@ -2,11 +2,25 @@ import machine, neopixel
 import time
 import ntptime
 import network
+import wifimgr     # importing the Wi-Fi manager library
+import gc
+try:
+  import usocket as socket
+except:
+  import socket
+  
+wlan = wifimgr.get_connection()        #initializing wlan
 
+if wlan is None:
+    print("Could not initialize the network connection.")
+    while True:
+        pass  
+print("ESP OK")
+print('network config:', wlan.ifconfig())
 #
 #################################################
 # BinDayCator micropython version for esp8266
-# and 3 LEDs in 3D printed Wheelie bin
+# and 4 LEDs in 3D printed Wheelie bin
 #################################################
 #
 # WS2812 LED strip Configuration
@@ -21,9 +35,10 @@ blue = [0,0,255]
 black = [0,0,0]
 white = [255,255,255]
 yellow = [255,255,0]
-orange = [237,112,20]
+mauve = [207,132,120]
 y_week = ["yellow", "green", "yellow", "green"]
 b_week = ["red", "green", "blue", "green"]
+err_week = ["red", "white", "red", "white"]
 #
 ############################################
 # Functions for RGB Coloring
@@ -56,7 +71,7 @@ def fall(fcolour):
     for ff in range (led_count):
         np[ff] = fall_colour
         np.write()
-        time.sleep(0.15)
+        time.sleep(0.1)
     time.sleep(0.5)
     
 def pulsing(colour):
@@ -100,9 +115,11 @@ def do_connect():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     if not wlan.isconnected():
-        print('connecting to network...')
-        wlan.connect('hyland_guest2g', 'hy1andkn0xr00neyb1ake')
+       ## print('connecting to network...')
+       ## wlan.connect('hyland_guest2g', 'hy1andkn0xr00neyb1ake')
         while not wlan.isconnected():
+            ### give it another go 
+            wlan = wifimgr.get_connection()  
             print("in network loop")
             ### still red
             pulsing('red')
@@ -139,6 +156,12 @@ def grabbinweek():
     r = requests.get(DCC_Call)
 # Use one of these depending on what your response looks like:
     print(r.text)
+
+#If Site returned less than full string text
+    if len(r.text) < 10:
+        colour = 'red'
+        return colour
+    
     jdata = json.loads(r.text)
     colour= jdata[0]['attributes']['CurrentWeek']  ### get the "y" or "b" part on return
     colour = colour.replace("y","yellow")
@@ -168,10 +191,14 @@ do_connect()
 
 ################ Get current bin colour
 week_colour = grabbinweek()
-if week_colour == 'yellow':
-    multi_colour = y_week
+
+if week_colour == 'red':
+    multi_colour = err_week
 else:
-    multi_colour = b_week
+    if week_colour == 'yellow':
+        multi_colour = y_week
+    else:
+        multi_colour = b_week
 
 # Main loop for twiddling metaphorical thumbs
 while True:
@@ -193,4 +220,4 @@ while True:
     time.sleep(5)
 # pulse up then down
 #   pulsing(week_index)
-    fall('orange')
+    fall('mauve')
