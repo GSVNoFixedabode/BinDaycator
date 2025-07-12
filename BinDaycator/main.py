@@ -9,17 +9,8 @@ try:
 except:
   import socket
   
-wlan = wifimgr.get_connection()        #initializing wlan
-
-if wlan is None:
-    print("Could not initialize the network connection.")
-    while True:
-        pass  
-print("ESP OK")
-print('network config:', wlan.ifconfig())
-#
 #################################################
-# BinDayCator micropython version for esp8266
+# BinDayCator micropython version for esp32-c3
 # and 4 LEDs in 3D printed Wheelie bin
 #################################################
 #
@@ -40,11 +31,29 @@ y_week = ["yellow", "green", "yellow", "green"]
 b_week = ["red", "green", "blue", "green"]
 err_week = ["red", "white", "red", "white"]
 #
+# Start pixel machine
+np = neopixel.NeoPixel(machine.Pin(pin_no), led_count)
+# On power on, turn LEDs red
+for ii in range (led_count):
+    np[ii] = red
+np.write()
+#
+
+############################################
+# Connect to wifi
+############################################
+wlan = wifimgr.get_connection()        #initializing wlan
+
+if wlan is None:
+    print("Could not initialize the network connection.")
+    while True:
+        pass  
+print("ESP OK")
+print('network config:', wlan.ifconfig())
+
 ############################################
 # Functions for RGB Coloring
 ############################################
-np = neopixel.NeoPixel(machine.Pin(pin_no), led_count)
-#
 def rainbow_cycle(wait):
     for j in range(255):
         for z in range(led_count):
@@ -150,7 +159,9 @@ def grabbinweek():
     print(curr_address)
 
 # Call DCC site
-    DCC_Call = "https://www.dunedin.govt.nz/design/rubbish-and-collection-days-search/lookup/_nocache?query=" + curr_address
+# https://www.dunedin.govt.nz/council/council-projects/waste-futures/the-future-of-rubbish-and-recycling-in-dunedin/new-bins/assets/api/arcgis-new-bins-lookup/_recache?query=167%20Signal%20HIll%20Road
+    DCC_Call = "https://dunedin.govt.nz/council/council-projects/waste-futures/the-future-of-rubbish-and-recycling-in-dunedin/new-bins/assets/api/arcgis-new-bins-lookup/_nocache?query=" + curr_address
+#   DCC_Call = "http://www.dunedin.govt.nz/design/rubbish-and-collection-days-search/lookup/_nocache?query=" + curr_address
     DCC_Call = DCC_Call.replace(" ", "%20")
     print(DCC_Call)
     r = requests.get(DCC_Call)
@@ -173,10 +184,6 @@ def grabbinweek():
 
 
 # And now for the main event
-# On power on, turn LEDs red
-for ii in range (led_count):
-    np[ii] = red
-np.write()
 ################ Network Start
 #wlan = wifimgr.get_connection(7)        #initializing wlan
 #if wlan is None:
